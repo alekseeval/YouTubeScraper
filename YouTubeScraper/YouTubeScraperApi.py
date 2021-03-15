@@ -4,9 +4,9 @@
 import googleapiclient as gc
 from googleapiclient.discovery import build
 
+import numpy as np
 import pandas as pd
-import json
-import pprint
+from pprint import pprint
 
 class YouTubeScrapper:
     #--------------------------------------------------------------------
@@ -22,33 +22,35 @@ class YouTubeScrapper:
         self.channel_id = channel_id
 
     #--------------------------------------------------------------------
-    # Метод возвращает список кортежей состоящих из id всех плейлистов
-    # и их названий (id, title) для канала
+    # Метод возвращает таблицу, содержащую в себе id плейлиста
+    # и его название
     #--------------------------------------------------------------------
     def getAllPlayListsFromChannel(self):
-        # Запрос на получение всех плейлистов канала
+        # Запрос на получение 50 плейлистов канала
         request = self.youtube.playlists().list(
             part        = "snippet",
             channelId   = self.channel_id,
             maxResults  = 50
         )
         response = request.execute()    
-        playlists_ids = []
+        # Заполнение таблицы
+        id_title_table = []
         for item in response.get('items'):
-            playlists_ids.append((item.get('id'), item.get('snippet').get('title')))
+            id_title_table.append([item.get('id'), item.get('snippet').get('title')])
+        # Если плейлистов больше 50, то необходиом перейти
+        # на следующую страницу запроса
         if ('nextPageToken' in response):
-            self.__getAllPlayListsFromChannelPagee(
+            self.__getAllPlayListsFromChannelPage(
                 response.get('nextPageToken'), 
-                playlist_id
+                id_title_table
             )
-        return playlists_ids
+        return id_title_table
 
     #--------------------------------------------------------------------
-    # Вспомогательный метод, который так же возвращает кортежи, состоящие из 
-    # id и title для всех плейлистов канала, но с учетом pagination
-    # Метод аналогичен предыдущему, за исключением параметров запроса
+    # Вспомогательный метод, аналогичный getAllPlayListsFromChannel 
+    # Необходим для перехода на следующую страницу запроса
     #--------------------------------------------------------------------
-    def __getAllPlayListsFromChannelPage(self, nextPageToken, playlists_id):
+    def __getAllPlayListsFromChannelPage(self, nextPageToken, id_title_table):
         request = self.youtube.playlists().list(
             part        = "snippet",
             channelId   = self.channel_id,
@@ -57,82 +59,107 @@ class YouTubeScrapper:
         )
         response = request.execute()
         for item in response.get('items'):
-            playlists_ids.append((item.get('id'), item.get('snippet').get('title')))
+            id_title_table.append([item.get('id'), item.get('snippet').get('title')])
         if ('nextPageToken' in response):
             self.__getAllPlayListsFromChannelPage(
                 response.get('nextPageToken'), 
-                playlist_id
+                id_title_table
             )
 
     #--------------------------------------------------------------------
-    # Метод возвращает id всех видео канала, содержащихся в некотором плейлисте
+    # Метод возвращает таблицу, содержащую в себе id видео и id плейлиста,
+    # в котором находится соответствующее видео
     #
     # Parameters:
     #
-    # playlist_id - id плейлиста, из которого получаем необходимую информацию
+    # playlists - id плейлиста, из которого получаем данные
     #--------------------------------------------------------------------
-    def getAllPlaylistItems(self, playlist_id):
+    def getAllPlaylistItems(self, playlist):
         request = self.youtube.playlistItems().list(
             part        ="id, contentDetails",
             maxResults  =50,
-            playlistId  =playlist_id
+            playlistId  =playlist
         )
         response = request.execute()
-        videos_id = []
+        video_playlist_table = []
         for item in response.get('items'):
-            videos_id.append(item.get('contentDetails').get('videoId'))
+            video_playlist_table.append([item.get('contentDetails').get('videoId'), playlist])
         if ('nextPageToken' in response):
-            self.__getAllPlaylistItemsFromPage(
-                playlist_id, 
+            self.__getAllPlaylistItemsPage(
+                playlist, 
                 response.get('nextPageToken'), 
-                videos_id
+                video_playlist_table
             )
-        return videos_id
+        return video_playlist_table
 
     #--------------------------------------------------------------------
-    # Вспомогательный метод, который возвращает id всех видео канала, 
-    # с учетом pagination в запросах
+    # Вспомогательный метод, который аналогичен getAllPlaylistItems, 
+    # но позволяет перемещаться по страницам запроса
     #--------------------------------------------------------------------
-    def __getAllPlaylistItemsFromPage(self, playlist_id, nextPageToken, videos_id):
+    def __getAllPlaylistItemsPage(self, playlist, nextPageToken, video_playlist_table):
         request = self.youtube.playlistItems().list(
-            part        ="id",
+            part        ="id, contentDetails",
             maxResults  =50,
-            playlistId  =playlist_id,
+            playlistId  =playlist,
             pageToken   =nextPageToken
         )
         response = request.execute()
         for item in response.get('items'):
-            videos_id.append(item.get('id'))
+            video_playlist_table.append([item.get('contentDetails').get('videoId'), playlist])
         if ('nextPageToken' in response):
-            self.__getAllPlaylistItemsFromPage(
-                playlist_id, 
+            self.__getAllPlaylistItemsPage(
+                playlist, 
                 response.get('nextPageToken'), 
-                videos_id
+                video_playlist_table
             )
 
     #--------------------------------------------------------------------
-    # Получение необходимой информации об отдельном видео 
+    # Получение необходимой информации о видео, связанной только с video API
     #--------------------------------------------------------------------
-    def getSingleVideoInfo(self, video_id, playlist_title):
+    def __getVideosData(self, videos):
         request = self.youtube.videos().list(
             part="snippet,contentDetails,statistics",
-            id=video_id
+            id=",".join(videos)
         )
         response = request.execute()
-        return 1
+        data = []
+        for video in response.get('items'):
+            cur_data = []
+            cur_data.append(video.get('id'))
+            snippet = video.get('snippet')
+            cur_data.append(snippet.get('title'))
+            cur_data.append(snippet.get('publishedAt'))
+            statistics = video.get('statistics')
+            cur_data += statistics.values()
+            cur_data.append(video.get('contentDetails').get('duration'))
+
+            data.append(cur_data)
+        return data
 
     #--------------------------------------------------------------------
     # Получение всей необходимой информации обо всех видео канала
     #--------------------------------------------------------------------
     def getAllVideosInfo(self):
-        playlist_ids = self.getAllPlayListsFromChannel()
-        all_videos_id = []
+        playlist_ids_titles = np.array(self.getAllPlayListsFromChannel())
+        pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'playlist_title'])
+
+        video_playlist_table = []
+        for playlist in playlist_ids_titles[:,0]:
+            video_playlist_table += self.getAllPlaylistItems(playlist)
+        video_playlist_table = np.array(video_playlist_table)
+        video_pl_table = pd.DataFrame(video_playlist_table, columns=['video_id', 'playlist_id'])
+        pprint(video_pl_table)
+        
+        videos = video_playlist_table[:,0]
+        videos = [videos[i:i+50] for i in range(0,len(videos),50)]
         videos_data = []
-        for playlist_id in playlist_ids:
-            for video_id in self.getAllPlaylistItems(playlist_id[0]):
-                # playlist_id[1]     % Название плейлиста
-                videos_data.append(self.getSingleVideoInfo(video_id, playlist_id[1]))
-        return videos_data
+        for videos50 in videos:
+            videos_data += self.__getVideosData(videos50)
+        videos_data = np.array(videos_data)
+        videos_data = pd.DataFrame(
+            videos_data, 
+            columns=['video_id', 'title', 'publishedDate', 'views', 'likes', 'dislikes', 'favorites', 'comments', 'duration']
+        )
 
 #--------------------------------------------------------------------
 # Получение необходимых данных
