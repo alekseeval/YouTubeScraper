@@ -142,6 +142,7 @@ class YouTubeScrapper:
     def getAllVideosInfo(self):
         playlist_ids_titles = np.array(self.getAllPlayListsFromChannel())
         pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'playlist_title'])
+        pprint(pl_ids_titles)
 
         video_playlist_table = []
         for playlist in playlist_ids_titles[:,0]:
@@ -160,6 +161,8 @@ class YouTubeScrapper:
             videos_data, 
             columns=['video_id', 'title', 'publishedDate', 'views', 'likes', 'dislikes', 'favorites', 'comments', 'duration']
         )
+        pprint(videos_data)
+
 
 #--------------------------------------------------------------------
 # Получение необходимых данных
