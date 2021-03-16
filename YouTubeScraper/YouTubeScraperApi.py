@@ -1,6 +1,3 @@
-# TODO: Разобраться с отображением информации для последующей записи
-# TODO: Рефакторинг названий переменных (Например playlist_id на самом деле кортеж еще и из title'а)
-
 import googleapiclient as gc
 from googleapiclient.discovery import build
 
@@ -17,6 +14,7 @@ class YouTubeScrapper:
     api_version = 'v3'
     youtube = build(api_service_name, api_version, developerKey=DEVELOPER_KEY)
     channel_id = "UC8M5YVWQan_3Elm-URehz9w"
+    channelTitle = ""
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -32,10 +30,12 @@ class YouTubeScrapper:
             channelId   = self.channel_id,
             maxResults  = 50
         )
-        response = request.execute()    
+        response = request.execute()
         # Заполнение таблицы
+        items = response.get('items')
+        channelTitle = items[0].get('snippet').get('channelTitle')  #Получение названия канала
         id_title_table = []
-        for item in response.get('items'):
+        for item in items:
             id_title_table.append([item.get('id'), item.get('snippet').get('title')])
         # Если плейлистов больше 50, то необходиом перейти
         # на следующую страницу запроса
@@ -140,17 +140,18 @@ class YouTubeScrapper:
     # Получение всей необходимой информации обо всех видео канала
     #--------------------------------------------------------------------
     def getAllVideosInfo(self):
+        # Получение таблицы [Playlist_ID, Playlist_Title]
         playlist_ids_titles = np.array(self.getAllPlayListsFromChannel())
         pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'playlist_title'])
-        pprint(pl_ids_titles)
 
+        # Получение таблицы [Video_ID, Playlist_Id]
         video_playlist_table = []
         for playlist in playlist_ids_titles[:,0]:
             video_playlist_table += self.getAllPlaylistItems(playlist)
         video_playlist_table = np.array(video_playlist_table)
         video_pl_table = pd.DataFrame(video_playlist_table, columns=['video_id', 'playlist_id'])
-        pprint(video_pl_table)
         
+        # Получение таблицы [Video_ID, ....(other info)]
         videos = video_playlist_table[:,0]
         videos = [videos[i:i+50] for i in range(0,len(videos),50)]
         videos_data = []
@@ -161,14 +162,8 @@ class YouTubeScrapper:
             videos_data, 
             columns=['video_id', 'title', 'publishedDate', 'views', 'likes', 'dislikes', 'favorites', 'comments', 'duration']
         )
-        pprint(videos_data)
 
-
-#--------------------------------------------------------------------
-# Получение необходимых данных
-#--------------------------------------------------------------------
-ys = YouTubeScrapper("UC8M5YVWQan_3Elm-URehz9w")
-ys.getAllVideosInfo()
-
-
-# PLRYgdCIHj6HVrFlC1FC-TuLTuMn1LkgQg - Топ Сикрет
+        # Соединение всех таблиц в единые данные
+        tmp = pd.merge(video_pl_table, pl_ids_titles, on='playlist_id')
+        data = pd.merge(videos_data, tmp, on='video_id')
+        return data
