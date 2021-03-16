@@ -16,7 +16,7 @@ def deleteUselessColumns(data):
 # ------------------------------------------------------------------------------------------------
 def main():
     # Получение данных о видео с канала
-    ys = YouTubeScrapper("UC8M5YVWQan_3Elm-URehz9w")
+    ys = YouTubeScrapper("UCdKuE7a2QZeHPhDntXVZ91w")
     data = ys.getAllVideosInfo()
     channelTitle = ys.getChannelTitle()
 
