@@ -19,6 +19,9 @@ class YouTubeScrapper:
     def __init__(self, channel_id):
         self.channel_id = channel_id
 
+    def getChannelTitle(self):
+        return self.channelTitle
+
     #--------------------------------------------------------------------
     # Метод возвращает таблицу, содержащую в себе id плейлиста
     # и его название
@@ -33,7 +36,7 @@ class YouTubeScrapper:
         response = request.execute()
         # Заполнение таблицы
         items = response.get('items')
-        channelTitle = items[0].get('snippet').get('channelTitle')  #Получение названия канала
+        self.channelTitle = items[0].get('snippet').get('channelTitle')  #Получение названия канала
         id_title_table = []
         for item in items:
             id_title_table.append([item.get('id'), item.get('snippet').get('title')])
@@ -129,8 +132,24 @@ class YouTubeScrapper:
             snippet = video.get('snippet')
             cur_data.append(snippet.get('title'))
             cur_data.append(snippet.get('publishedAt'))
+
+            # У видео могут быть закрыты комментарии или дизлайки
+            # и упаси бог узнать что еще там может быть закрыто
             statistics = video.get('statistics')
-            cur_data += statistics.values()
+            if 'viewCount' in statistics:
+                cur_data.append(statistics.get('viewCount'))
+            else: cur_data.append('Null')
+            if 'likeCount' in statistics:
+                cur_data.append(statistics.get('likeCount'))
+                cur_data.append(statistics.get('dislikeCount'))
+            else: cur_data.append('Null').append('Null')
+            if 'favoriteCount' in statistics:
+                cur_data.append(statistics.get('favoriteCount'))
+            else: cur_data.append('Null')
+            if 'commentCount' in statistics:
+                cur_data.append(statistics.get('commentCount'))
+            else: cur_data.append('Null')
+
             cur_data.append(video.get('contentDetails').get('duration'))
 
             data.append(cur_data)
