@@ -27,7 +27,6 @@ def main():
               sep=',',
               encoding='utf_16'
               )
-    pprint(data.head())
 
 if __name__ == "__main__":
     main()
