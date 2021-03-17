@@ -13,8 +13,10 @@ def deleteUselessColumns(data):
     del data['video_id']
     del data['playlist_id']
 
+
 def formatDuration(data):
     data['duration'] = data['duration'].map(lambda date: isodate.parse_duration(date).total_seconds())
+
 
 # ------------------------------------------------------------------------------------------------
 def main():
@@ -39,3 +41,4 @@ if __name__ == "__main__":
 
 # UC8M5YVWQan_3Elm-URehz9w - Топа
 # UCdKuE7a2QZeHPhDntXVZ91w - Куплинов
+# UCDaIW2zPRWhzQ9Hj7a0QP1w - Усачев
