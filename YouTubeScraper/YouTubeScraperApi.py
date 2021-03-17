@@ -164,22 +164,28 @@ class YouTubeScrapper:
     # --------------------------------------------------------------------
     def getAllVideosInfo(self):
         # Получение таблицы [Playlist_ID, Playlist_Title]
+        print('----> Начато получение данных по плейлистам')
         playlist_ids_titles = np.array(self.getAllPlayListsFromChannel())
         pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'playlist_title'])
+        print('----> Закончено получение данных по плейлистам\n')
 
         # Получение таблицы [Video_ID, Playlist_Id]
+        print('----> Начато получение данных по видео из плейлистов')
         video_playlist_table = []
         for playlist in playlist_ids_titles[:, 0]:
             video_playlist_table += self.getAllPlaylistItems(playlist)
         video_playlist_table = np.array(video_playlist_table)
         video_pl_table = pd.DataFrame(video_playlist_table, columns=['video_id', 'playlist_id'])
+        print('----> Закончено получение данных по видео из плейлистов\n')
 
         # Получение таблицы [Video_ID, ....(other info)]
         videos = video_playlist_table[:, 0]
         videos = [videos[i:i + 50] for i in range(0, len(videos), 50)]
         videos_data = []
+        print('----> Начато получение данных по всем видео')
         for videos50 in videos:
             videos_data += self.__getVideosData(videos50)
+        print('----> Закончено получение данных по всем видео\n')
         videos_data = np.array(videos_data)
         videos_data = pd.DataFrame(
             videos_data,
