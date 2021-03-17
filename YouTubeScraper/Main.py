@@ -14,6 +14,9 @@ def deleteUselessColumns(data):
     del data['playlist_id']
 
 
+# ------------------------------------------------------------------------------------------------
+#  Преобразование длительности видео из формата iso8061 в секунды
+# ------------------------------------------------------------------------------------------------
 def formatDuration(data):
     data['duration'] = data['duration'].map(lambda date: isodate.parse_duration(date).total_seconds())
 
