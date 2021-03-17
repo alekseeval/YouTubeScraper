@@ -144,7 +144,8 @@ class YouTubeScrapper:
                 cur_data.append(statistics.get('likeCount'))
                 cur_data.append(statistics.get('dislikeCount'))
             else:
-                cur_data.append('Null').append('Null')
+                cur_data.append('Null')
+                cur_data.append('Null')
             if 'favoriteCount' in statistics:
                 cur_data.append(statistics.get('favoriteCount'))
             else:
