@@ -23,10 +23,12 @@ class YouTubeScraper:
         a_tags = WebDriverWait(self.driver, 5).until(
             EC.presence_of_all_elements_located((By.LINK_TEXT, 'ПОСМОТРЕТЬ ВЕСЬ ПЛЕЙЛИСТ'))
         )
-        links = []
-        for a in a_tags:
-            links.append(a.get_attribute('href'))
-        return links
+        titles_elements = self.driver.find_elements_by_css_selector('#video-title')
+        links_titles = [[], []]
+        for i in range(len(a_tags)):
+            links_titles[0].append(a_tags[i].get_attribute('href'))
+            links_titles[1].append(titles_elements[i].text)
+        return links_titles
 
     # ------------------------------------------------------------------------------------------------------------------
     # Метод скроллит текущую страницу вниз до конца
@@ -44,12 +46,25 @@ class YouTubeScraper:
                 last_height = new_height
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Возвращает ссылки на видео из плейлиста
+    #
+    # Parameters:
+    #
+    # playlist_href - Ссылка на плейлист
+    # ------------------------------------------------------------------------------------------------------------------
+    def get_all_videos_links(self, playlist_href):
+        return []
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Возвращает DataFrame со всей нужной инофрмацией о видео на канале
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_videos_info(self):
-        playlists_links = self.get_all_playlists_links()
+        playlists_info = self.get_all_playlists_links()
+        videos_links = []
+        for playlist in playlists_info[0]:
+            videos_links += self.get_all_videos_links(playlist)
 
-        pprint(playlists_links)
+        pprint(playlists_info)
         self.driver.close()
 
 # ----------------------------------------------------------------------------------------------------------------------
