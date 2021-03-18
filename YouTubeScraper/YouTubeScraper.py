@@ -33,16 +33,11 @@ class YouTubeScraper:
     # ------------------------------------------------------------------------------------------------------------------
     def __scroll_page_to_bottom(self):
         load_pause = 1  # Пауза в сек для подгрузки данных
-        box = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located(
-                (By.XPATH, '//*[@id="page-manager"]/ytd-browse/ytd-two-column-browse-results-renderer')
-            )
-        )
-        last_height = box.size['height']
+        last_height = self.driver.execute_script("return window.scrollY;")
         while True:
             self.driver.execute_script("window.scrollBy(0, " + str(8000) + ");")
             sleep(load_pause)
-            new_height = box.size['height']
+            new_height = self.driver.execute_script("return window.scrollY;")
             if new_height == last_height:
                 break
             else:
