@@ -1,6 +1,4 @@
-import googleapiclient as gc
 from googleapiclient.discovery import build
-
 import numpy as np
 import pandas as pd
 

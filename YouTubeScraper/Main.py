@@ -1,8 +1,4 @@
 from YouTubeScraperApi import YouTubeScrapper
-
-import pandas as pd
-import numpy as np
-from pprint import pprint
 import isodate
 
 
@@ -33,7 +29,7 @@ def main():
     formatDuration(data)
 
     # Запись данных в CSV файл
-    data.to_csv('result/' + channelTitle + '.csv',
+    data.to_csv('data/' + channelTitle + '.csv',
                 sep=',',
                 encoding='utf_16'
                 )
