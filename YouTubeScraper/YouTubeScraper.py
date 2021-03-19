@@ -15,7 +15,7 @@ class YouTubeScraper:
         self.channel = channel
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Возвращает все ссылки на плейлисты канала self.channel
+    # Возвращает все ссылки на плейлисты канала self.channel и Заголовки этих плейлистов в виде двумерного массива
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_playlists_links(self):
         self.driver.get("https://www.youtube.com/channel/" + self.channel + "/playlists?view=1&sort=dd&shelf_id=0")
@@ -46,30 +46,41 @@ class YouTubeScraper:
                 last_height = new_height
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Возвращает ссылки на видео из плейлиста
+    # Возвращает ссылки на видео из плейлиста и ссылку на плейлист к каждому видео, в виде двумерного массива
     #
     # Parameters:
     #
     # playlist_href - Ссылка на плейлист
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_videos_links(self, playlist_href):
-        return []
+        self.driver.get(playlist_href)
+        titles = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '#video-title'))
+        )
+        videos = [[], []]
+        for video in titles:
+            videos[0].append(video.get_attribute('href'))
+            videos[1].append(playlist_href)
+
+        return videos
 
     # ------------------------------------------------------------------------------------------------------------------
     # Возвращает DataFrame со всей нужной инофрмацией о видео на канале
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_videos_info(self):
         playlists_info = self.get_all_playlists_links()
-        videos_links = []
+        videos_links = [[], []]
         for playlist in playlists_info[0]:
-            videos_links += self.get_all_videos_links(playlist)
+            tmp = self.get_all_videos_links(playlist)
+            videos_links[0] += tmp[0]
+            videos_links[1] += tmp[1]
 
-        pprint(playlists_info)
+        pprint(str(len(videos_links[0])) + ' - ' + str(len(videos_links[1])))
         self.driver.close()
 
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
-    ys = YouTubeScraper('UCdKuE7a2QZeHPhDntXVZ91w')
+    ys = YouTubeScraper('UC8M5YVWQan_3Elm-URehz9w')
     ys.get_all_videos_info()
 
 
