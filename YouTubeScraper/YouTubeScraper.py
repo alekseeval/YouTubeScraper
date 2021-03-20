@@ -8,7 +8,6 @@ from pprint import pprint
 import re
 
 import requests
-from bs4 import BeautifulSoup
 
 
 class YouTubeScraper:
