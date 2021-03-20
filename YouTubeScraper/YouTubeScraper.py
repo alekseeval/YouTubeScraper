@@ -88,15 +88,18 @@ class YouTubeScraper:
         return videos
 
     # ------------------------------------------------------------------------------------------------------------------
+    #           *** Метод реализованный через библиотеку Selenium ***
+    # Аналогичного метода через Selenium не существует
     # Возвращает строку таблицы с информацией по видео
     #
     # Parameters:
     #
     # video_link - Ссылка на видео
     # ------------------------------------------------------------------------------------------------------------------
+    # TODO: Написать метод
     def get_all_video_data(self, video_link):
         self.driver.get(video_link)
-        return[]
+        return []
 
     # ------------------------------------------------------------------------------------------------------------------
     # Возвращает DataFrame со всей нужной инофрмацией о видео на канале
@@ -116,15 +119,19 @@ class YouTubeScraper:
         # Получение таблицы |video_link | ... | dislikes | likes | duration|
         videos_info = []
         for video_link in videos_pl_links[0]:
-            videos_info += self.get_all_video_data(video_link)
+            videos_info += self.get_all_video_data_request(video_link)
 
-        pprint(videos_info)
         self.driver.close()
+        # TODO: Сформировать все три таблицы в единый DataFrame из Pandas
+
+        return videos_info
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
     ys = YouTubeScraper('UC8M5YVWQan_3Elm-URehz9w')
-    ys.get_all_videos_info()
+    data = ys.get_all_videos_info()
+    pprint(data)
 
 
 if __name__ == '__main__':
