@@ -5,6 +5,10 @@ from selenium.webdriver.common.by import By
 
 from time import sleep
 from pprint import pprint
+import re
+
+import requests
+from bs4 import BeautifulSoup
 
 
 class YouTubeScraper:
@@ -46,6 +50,7 @@ class YouTubeScraper:
                 last_height = new_height
 
     # ------------------------------------------------------------------------------------------------------------------
+    #           *** Метод реализованный через библиотеку Selenium ***
     # Возвращает ссылки на видео из плейлиста и ссылку на плейлист к каждому видео, в виде двумерного массива
     #
     # Parameters:
@@ -65,17 +70,56 @@ class YouTubeScraper:
         return videos
 
     # ------------------------------------------------------------------------------------------------------------------
+    #           *** Метод реализованный через регулярные выражения и библиотеку Request ***
+    # Возвращает ссылки на видео из плейлиста и ссылку на плейлист к каждому видео, в виде двумерного массива
+    #
+    # Parameters:
+    #
+    # playlist_href - Ссылка на плейлист
+    # ------------------------------------------------------------------------------------------------------------------
+    def get_all_videos_links_request(self, playlist_href):
+        response_text = requests.get(playlist_href).text
+        videos_id = re.findall(r'playlistVideoRenderer":\{"videoId":"[\w,\-,_]+"', response_text)
+        videos = [[], []]
+        for videos_str in videos_id:
+            videos_str = videos_str.replace('playlistVideoRenderer":{"videoId":"', '')
+            videos_str = videos_str.replace('"', '')
+            videos[0].append('https://www.youtube.com/watch?v=' + videos_str)
+            videos[1].append(playlist_href)
+        return videos
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Возвращает строку таблицы с информацией по видео
+    #
+    # Parameters:
+    #
+    # video_link - Ссылка на видео
+    # ------------------------------------------------------------------------------------------------------------------
+    def get_all_video_data(self, video_link):
+        self.driver.get(video_link)
+        return[]
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Возвращает DataFrame со всей нужной инофрмацией о видео на канале
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_videos_info(self):
+        # Получение таблицы |playlist_link | playlist_title|
         playlists_info = self.get_all_playlists_links()
-        videos_links = [[], []]
-        for playlist in playlists_info[0]:
-            tmp = self.get_all_videos_links(playlist)
-            videos_links[0] += tmp[0]
-            videos_links[1] += tmp[1]
 
-        pprint(str(len(videos_links[0])) + ' - ' + str(len(videos_links[1])))
+        # Получение таблицы |video_link | playlist_link|
+        videos_pl_links = [[], []]
+        for playlist in playlists_info[0]:
+            tmp = self.get_all_videos_links_request(playlist)
+            videos_pl_links[0] += tmp[0]
+            videos_pl_links[1] += tmp[1]
+        pprint(len(videos_pl_links[0]))
+
+        # Получение таблицы |video_link | ... | dislikes | likes | duration|
+        videos_info = []
+        for video_link in videos_pl_links[0]:
+            videos_info += self.get_all_video_data(video_link)
+
+        pprint(videos_info)
         self.driver.close()
 
 # ----------------------------------------------------------------------------------------------------------------------
