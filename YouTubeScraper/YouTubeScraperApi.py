@@ -165,7 +165,7 @@ class YouTubeScrapper:
         # Получение таблицы [Playlist_ID, Playlist_Title]
         print('----> Начато получение данных по плейлистам')
         playlist_ids_titles = np.array(self.getAllPlayListsFromChannel())
-        pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'playlist_title'])
+        pl_ids_titles = pd.DataFrame(playlist_ids_titles, columns=['playlist_id', 'Название плейлиста'])
         print('----> Закончено получение данных по плейлистам\n')
 
         # Получение таблицы [Video_ID, Playlist_Id]
@@ -188,8 +188,8 @@ class YouTubeScrapper:
         videos_data = np.array(videos_data)
         videos_data = pd.DataFrame(
             videos_data,
-            columns=['video_id', 'title', 'publishedDate', 'views', 'likes', 'dislikes', 'favorites', 'comments',
-                     'duration']
+            columns=['video_id', 'Название', 'Дата публикации', 'Просмотры', 'Лайки',
+                     'Дизлайки', 'Избранное', 'Комментарии', 'Длительность']
         )
 
         # Соединение всех таблиц в единые данные
